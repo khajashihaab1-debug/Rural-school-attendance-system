@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Register Student - Rural School Attendance System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>Register New Student
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <form id="registrationForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="studentId" class="form-label">Student ID</label>
+                                <input type="text" class="form-control" id="studentId" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="studentName" class="form-label">Student Name</label>
+                                <input type="text" class="form-control" id="studentName" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="className" class="form-label">Class</label>
+                                <select class="form-control" id="className" required>
+                                    <option value="">Select Class</option>
+                                    <option value="1">Class 1</option>
+                                    <option value="2">Class 2</option>
+                                    <option value="3">Class 3</option>
+                                    <option value="4">Class 4</option>
+                                    <option value="5">Class 5</option>
+                                    <option value="6">Class 6</option>
+                                    <option value="7">Class 7</option>
+                                    <option value="8">Class 8</option>
+                                    <option value="9">Class 9</option>
+                                    <option value="10">Class 10</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="section" class="form-label">Section</label>
+                                <select class="form-control" id="section" required>
+                                    <option value="">Select Section</option>
+                                    <option value="A">Section A</option>
+                                    <option value="B">Section B</option>
+                                    <option value="C">Section C</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Student Photo</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="video-container mb-3">
+                                    <video id="video" autoplay muted></video>
+                                </div>
+                                <div class="text-center">
+                                    <button type="button" class="btn btn-success me-2" id="startCamera">
+                                        <i class="fas fa-camera me-1"></i>Start Camera
+                                    </button>
+                                    <button type="button" class="btn btn-warning me-2" id="capturePhoto" disabled>
+                                        <i class="fas fa-camera-retro me-1"></i>Capture Photo
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" id="stopCamera" disabled>
+                                        <i class="fas fa-stop me-1"></i>Stop Camera
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="text-center">
+                                    <canvas id="canvas" style="display: none;"></canvas>
+                                    <div id="photoPreview" class="border rounded p-3" style="min-height: 200px; display: flex; align-items: center; justify-content: center; background-color: #f8f9fa;">
+                                        <span class="text-muted">Photo will appear here</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save me-2"></i>Register Student
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-check-circle me-2"></i>Success
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="successMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Error
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="errorMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let video = document.getElementById('video');
+let canvas = document.getElementById('canvas');
+let context = canvas.getContext('2d');
+let capturedPhoto = null;
+let stream = null;
+
+document.getElementById('startCamera').addEventListener('click', async function() {
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        
+        document.getElementById('startCamera').disabled = true;
+        document.getElementById('capturePhoto').disabled = false;
+        document.getElementById('stopCamera').disabled = false;
+    } catch (err) {
+        alert('Error accessing camera: ' + err.message);
+    }
+});
+
+document.getElementById('capturePhoto').addEventListener('click', function() {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0);
+    
+    // Convert to base64
+    capturedPhoto = canvas.toDataURL('image/jpeg');
+    
+    // Show preview
+    document.getElementById('photoPreview').innerHTML = 
+        '<img src="' + capturedPhoto + '" class="img-fluid rounded" style="max-height: 200px;">';
+});
+
+document.getElementById('stopCamera').addEventListener('click', function() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
+        
+        document.getElementById('startCamera').disabled = false;
+        document.getElementById('capturePhoto').disabled = true;
+        document.getElementById('stopCamera').disabled = true;
+    }
+});
+
+document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    if (!capturedPhoto) {
+        document.getElementById('errorMessage').textContent = 'Please capture a photo of the student.';
+        new bootstrap.Modal(document.getElementById('errorModal')).show();
+        return;
+    }
+    
+    const formData = {
+        student_id: document.getElementById('studentId').value,
+        name: document.getElementById('studentName').value,
+        class_name: document.getElementById('className').value,
+        section: document.getElementById('section').value,
+        photo: capturedPhoto
+    };
+    
+    try {
+        const response = await fetch('/api/register_student', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            document.getElementById('successMessage').textContent = result.message;
+            new bootstrap.Modal(document.getElementById('successModal')).show();
+            
+            // Reset form
+            document.getElementById('registrationForm').reset();
+            document.getElementById('photoPreview').innerHTML = 
+                '<span class="text-muted">Photo will appear here</span>';
+            capturedPhoto = null;
+            
+            // Stop camera
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+                document.getElementById('startCamera').disabled = false;
+                document.getElementById('capturePhoto').disabled = true;
+                document.getElementById('stopCamera').disabled = true;
+            }
+        } else {
+            document.getElementById('errorMessage').textContent = result.message;
+            new bootstrap.Modal(document.getElementById('errorModal')).show();
+        }
+    } catch (error) {
+        document.getElementById('errorMessage').textContent = 'Network error: ' + error.message;
+        new bootstrap.Modal(document.getElementById('errorModal')).show();
+    }
+});
+</script>
+{% endblock %}

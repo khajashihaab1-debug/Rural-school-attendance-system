@@ -1,0 +1,372 @@
+{% extends "base.html" %}
+
+{% block title %}Mark Attendance - Rural School Attendance System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-camera me-2"></i>Mark Attendance
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="video-container mb-3">
+                            <video id="video" autoplay muted></video>
+                        </div>
+                        <div class="text-center">
+                            <button type="button" class="btn btn-success me-2" id="startCamera">
+                                <i class="fas fa-camera me-1"></i>Start Camera
+                            </button>
+                            <button type="button" class="btn btn-warning me-2" id="captureAttendance" disabled>
+                                <i class="fas fa-user-check me-1"></i>Mark Attendance
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="stopCamera" disabled>
+                                <i class="fas fa-stop me-1"></i>Stop Camera
+                            </button>
+                        </div>
+                        <div class="mt-3">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Instructions:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>Start the camera and ensure good lighting</li>
+                                    <li>Students should look directly at the camera</li>
+                                    <li>Multiple students can be detected in one image</li>
+                                    <li>Click "Mark Attendance" to capture and process</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-users me-2"></i>Detected Students
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="detectedStudents">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-user-clock fa-3x mb-3"></i>
+                                        <p>No students detected yet</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-clock me-2"></i>Today's Summary
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="todaySummary">
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <div class="border rounded p-2">
+                                                <h6 class="text-success mb-1" id="presentCount">0</h6>
+                                                <small class="text-muted">Present</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="border rounded p-2">
+                                                <h6 class="text-danger mb-1" id="absentCount">0</h6>
+                                                <small class="text-muted">Absent</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="border rounded p-2">
+                                                <h6 class="text-info mb-1" id="totalCount">0</h6>
+                                                <small class="text-muted">Total</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Attendance -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>Recent Attendance (Today)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="recentAttendanceTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Class</th>
+                                <th>Section</th>
+                                <th>Time</th>
+                                <th>Confidence</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">No attendance records for today</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-check-circle me-2"></i>Attendance Marked
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="successMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Error
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="errorMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<canvas id="canvas" style="display: none;"></canvas>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let video = document.getElementById('video');
+let canvas = document.getElementById('canvas');
+let context = canvas.getContext('2d');
+let stream = null;
+
+// Load today's summary on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadTodaysSummary();
+});
+
+document.getElementById('startCamera').addEventListener('click', async function() {
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                width: { ideal: 640 }, 
+                height: { ideal: 480 } 
+            } 
+        });
+        video.srcObject = stream;
+        
+        document.getElementById('startCamera').disabled = true;
+        document.getElementById('captureAttendance').disabled = false;
+        document.getElementById('stopCamera').disabled = false;
+    } catch (err) {
+        document.getElementById('errorMessage').textContent = 'Error accessing camera: ' + err.message;
+        new bootstrap.Modal(document.getElementById('errorModal')).show();
+    }
+});
+
+document.getElementById('captureAttendance').addEventListener('click', async function() {
+    if (!stream) {
+        document.getElementById('errorMessage').textContent = 'Camera is not active';
+        new bootstrap.Modal(document.getElementById('errorModal')).show();
+        return;
+    }
+    
+    // Capture image
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0);
+    
+    const imageData = canvas.toDataURL('image/jpeg');
+    
+    // Show loading
+    document.getElementById('detectedStudents').innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Processing...</span>
+            </div>
+            <p class="mt-2">Detecting faces...</p>
+        </div>
+    `;
+    
+    try {
+        const response = await fetch('/api/mark_attendance', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ image: imageData })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            displayDetectedStudents(result.students);
+            document.getElementById('successMessage').textContent = result.message;
+            new bootstrap.Modal(document.getElementById('successModal')).show();
+            
+            // Refresh summary and recent attendance
+            loadTodaysSummary();
+        } else {
+            document.getElementById('errorMessage').textContent = result.message;
+            new bootstrap.Modal(document.getElementById('errorModal')).show();
+            
+            // Clear detected students
+            document.getElementById('detectedStudents').innerHTML = `
+                <div class="text-center text-muted">
+                    <i class="fas fa-user-times fa-3x mb-3"></i>
+                    <p>No students detected</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        document.getElementById('errorMessage').textContent = 'Network error: ' + error.message;
+        new bootstrap.Modal(document.getElementById('errorModal')).show();
+        
+        document.getElementById('detectedStudents').innerHTML = `
+            <div class="text-center text-muted">
+                <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                <p>Error processing image</p>
+            </div>
+        `;
+    }
+});
+
+document.getElementById('stopCamera').addEventListener('click', function() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
+        
+        document.getElementById('startCamera').disabled = false;
+        document.getElementById('captureAttendance').disabled = true;
+        document.getElementById('stopCamera').disabled = true;
+    }
+});
+
+function displayDetectedStudents(students) {
+    if (students.length === 0) {
+        document.getElementById('detectedStudents').innerHTML = `
+            <div class="text-center text-muted">
+                <i class="fas fa-user-times fa-3x mb-3"></i>
+                <p>No students detected</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    students.forEach(student => {
+        const confidencePercent = Math.round(student.confidence * 100);
+        const confidenceClass = confidencePercent >= 80 ? 'success' : confidencePercent >= 60 ? 'warning' : 'danger';
+        
+        html += `
+            <div class="border rounded p-3 mb-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1">${student.name}</h6>
+                        <small class="text-muted">ID: ${student.student_id} | Class: ${student.class}-${student.section}</small>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-${confidenceClass}">${confidencePercent}%</span>
+                        <br>
+                        <small class="text-success">
+                            <i class="fas fa-check-circle me-1"></i>Present
+                        </small>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    document.getElementById('detectedStudents').innerHTML = html;
+}
+
+async function loadTodaysSummary() {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const response = await fetch(`/api/attendance_report?date=${today}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            const data = result.data;
+            const present = data.filter(student => student.status === 'Present').length;
+            const absent = data.filter(student => student.status === 'Absent').length;
+            const total = data.length;
+            
+            document.getElementById('presentCount').textContent = present;
+            document.getElementById('absentCount').textContent = absent;
+            document.getElementById('totalCount').textContent = total;
+            
+            // Update recent attendance table
+            updateRecentAttendanceTable(data.filter(student => student.status === 'Present'));
+        }
+    } catch (error) {
+        console.error('Error loading today\'s summary:', error);
+    }
+}
+
+function updateRecentAttendanceTable(presentStudents) {
+    const tbody = document.querySelector('#recentAttendanceTable tbody');
+    
+    if (presentStudents.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No attendance records for today</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    presentStudents.forEach(student => {
+        const confidencePercent = student.confidence ? Math.round(student.confidence * 100) + '%' : 'N/A';
+        html += `
+            <tr>
+                <td>${student.student_id}</td>
+                <td>${student.name}</td>
+                <td>${student.class}</td>
+                <td>${student.section}</td>
+                <td>${student.time_in || 'N/A'}</td>
+                <td>${confidencePercent}</td>
+                <td><span class="badge bg-success">Present</span></td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,352 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Rural School Attendance System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Attendance Reports
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <!-- Date Selection -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <label for="reportDate" class="form-label">Select Date</label>
+                        <input type="date" class="form-control" id="reportDate">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="classFilter" class="form-label">Filter by Class</label>
+                        <select class="form-control" id="classFilter">
+                            <option value="">All Classes</option>
+                            <option value="1">Class 1</option>
+                            <option value="2">Class 2</option>
+                            <option value="3">Class 3</option>
+                            <option value="4">Class 4</option>
+                            <option value="5">Class 5</option>
+                            <option value="6">Class 6</option>
+                            <option value="7">Class 7</option>
+                            <option value="8">Class 8</option>
+                            <option value="9">Class 9</option>
+                            <option value="10">Class 10</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="button" class="btn btn-primary me-2" id="generateReport">
+                            <i class="fas fa-search me-1"></i>Generate Report
+                        </button>
+                        <button type="button" class="btn btn-success" id="exportReport">
+                            <i class="fas fa-download me-1"></i>Export CSV
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Summary Cards -->
+                <div class="row mb-4" id="summaryCards" style="display: none;">
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <h3 id="totalPresent">0</h3>
+                                <p class="mb-0">Present</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body text-center">
+                                <h3 id="totalAbsent">0</h3>
+                                <p class="mb-0">Absent</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body text-center">
+                                <h3 id="totalStudents">0</h3>
+                                <p class="mb-0">Total Students</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body text-center">
+                                <h3 id="attendanceRate">0%</h3>
+                                <p class="mb-0">Attendance Rate</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Attendance Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover" id="attendanceTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Class</th>
+                                <th>Section</th>
+                                <th>Status</th>
+                                <th>Time In</th>
+                                <th>Confidence</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">Select a date and click "Generate Report" to view attendance data</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Student List Modal -->
+<div class="modal fade" id="studentListModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-users me-2"></i>All Registered Students
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Class</th>
+                                <th>Section</th>
+                                <th>Photo</th>
+                                <th>Registered</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentListTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-tools me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <button type="button" class="btn btn-outline-primary w-100" id="viewAllStudents">
+                            <i class="fas fa-users me-2"></i>View All Students
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="button" class="btn btn-outline-success w-100" id="todayReport">
+                            <i class="fas fa-calendar-day me-2"></i>Today's Report
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="button" class="btn btn-outline-info w-100" id="weeklyReport">
+                            <i class="fas fa-calendar-week me-2"></i>This Week's Summary
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentReportData = [];
+
+// Set today's date as default
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('reportDate').value = today;
+});
+
+document.getElementById('generateReport').addEventListener('click', function() {
+    const date = document.getElementById('reportDate').value;
+    const classFilter = document.getElementById('classFilter').value;
+    
+    if (!date) {
+        alert('Please select a date');
+        return;
+    }
+    
+    generateReport(date, classFilter);
+});
+
+document.getElementById('todayReport').addEventListener('click', function() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('reportDate').value = today;
+    document.getElementById('classFilter').value = '';
+    generateReport(today, '');
+});
+
+document.getElementById('weeklyReport').addEventListener('click', function() {
+    // This would require additional backend implementation for weekly summary
+    alert('Weekly summary feature coming soon!');
+});
+
+document.getElementById('viewAllStudents').addEventListener('click', async function() {
+    try {
+        const response = await fetch('/api/students');
+        const result = await response.json();
+        
+        if (result.success) {
+            displayStudentList(result.students);
+            new bootstrap.Modal(document.getElementById('studentListModal')).show();
+        }
+    } catch (error) {
+        alert('Error loading student list: ' + error.message);
+    }
+});
+
+document.getElementById('exportReport').addEventListener('click', function() {
+    if (currentReportData.length === 0) {
+        alert('No data to export. Please generate a report first.');
+        return;
+    }
+    
+    exportToCSV(currentReportData);
+});
+
+async function generateReport(date, classFilter) {
+    try {
+        const response = await fetch(`/api/attendance_report?date=${date}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            let data = result.data;
+            
+            // Apply class filter
+            if (classFilter) {
+                data = data.filter(student => student.class === classFilter);
+            }
+            
+            currentReportData = data;
+            displayReport(data, date);
+        } else {
+            alert('Error generating report: ' + result.message);
+        }
+    } catch (error) {
+        alert('Network error: ' + error.message);
+    }
+}
+
+function displayReport(data, date) {
+    // Update summary cards
+    const present = data.filter(student => student.status === 'Present').length;
+    const absent = data.filter(student => student.status === 'Absent').length;
+    const total = data.length;
+    const attendanceRate = total > 0 ? Math.round((present / total) * 100) : 0;
+    
+    document.getElementById('totalPresent').textContent = present;
+    document.getElementById('totalAbsent').textContent = absent;
+    document.getElementById('totalStudents').textContent = total;
+    document.getElementById('attendanceRate').textContent = attendanceRate + '%';
+    
+    document.getElementById('summaryCards').style.display = 'block';
+    
+    // Update table
+    const tbody = document.querySelector('#attendanceTable tbody');
+    
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No students found for the selected criteria</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    data.forEach(student => {
+        const statusClass = student.status === 'Present' ? 'success' : 'danger';
+        const confidenceText = student.confidence ? Math.round(student.confidence * 100) + '%' : 'N/A';
+        
+        html += `
+            <tr>
+                <td>${student.student_id}</td>
+                <td>${student.name}</td>
+                <td>${student.class}</td>
+                <td>${student.section}</td>
+                <td><span class="badge bg-${statusClass}">${student.status}</span></td>
+                <td>${student.time_in || 'N/A'}</td>
+                <td>${confidenceText}</td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+function displayStudentList(students) {
+    const tbody = document.getElementById('studentListTableBody');
+    
+    if (students.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No students registered</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    students.forEach(student => {
+        const photoHtml = student.photo_path ? 
+            `<img src="/${student.photo_path}" alt="${student.name}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">` : 
+            '<i class="fas fa-user-circle fa-2x text-muted"></i>';
+        
+        html += `
+            <tr>
+                <td>${student.student_id}</td>
+                <td>${student.name}</td>
+                <td>${student.class}</td>
+                <td>${student.section}</td>
+                <td class="text-center">${photoHtml}</td>
+                <td>${student.created_at}</td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+function exportToCSV(data) {
+    const headers = ['Student ID', 'Name', 'Class', 'Section', 'Status', 'Time In', 'Confidence'];
+    const csvContent = [
+        headers.join(','),
+        ...data.map(student => [
+            student.student_id,
+            `"${student.name}"`,
+            student.class,
+            student.section,
+            student.status,
+            student.time_in || '',
+            student.confidence ? Math.round(student.confidence * 100) + '%' : ''
+        ].join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `attendance_report_${document.getElementById('reportDate').value}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+</script>
+{% endblock %}
